@@ -28,6 +28,29 @@ def main():
     args = parser.parse_args()
 
     try:
+        # On Linux/macOS, check if another instance is recording and signal it to stop
+        # This enables toggle behavior similar to the Windows hotkey service
+        if args.one_shot:
+            from .core import RECORDING_LOCK_FILE, STOP_SIGNAL_FILE, get_config_dir
+            import os
+
+            if RECORDING_LOCK_FILE.exists():
+                try:
+                    pid = int(RECORDING_LOCK_FILE.read_text().strip())
+                    # Check if process is still running
+                    try:
+                        os.kill(pid, 0)
+                        # Process exists - signal it to stop
+                        get_config_dir()
+                        STOP_SIGNAL_FILE.write_text(str(os.getpid()))
+                        print("Signaled recording to stop...")
+                        return
+                    except OSError:
+                        # Stale lock file - clean it up
+                        RECORDING_LOCK_FILE.unlink(missing_ok=True)
+                except (ValueError, OSError, PermissionError):
+                    pass
+
         app = Dictation(one_shot=args.one_shot)
         if args.one_shot:
             app.run_one_shot()
