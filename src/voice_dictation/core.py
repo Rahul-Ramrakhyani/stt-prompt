@@ -284,7 +284,16 @@ class Dictation:
                 kb.press('v')
                 kb.release('v')
                 kb.release(Key.cmd)
+            elif IS_LINUX:
+                # Linux terminals require Ctrl+Shift+V, GUI apps accept both
+                kb.press(Key.ctrl)
+                kb.press(Key.shift)
+                kb.press('v')
+                kb.release('v')
+                kb.release(Key.shift)
+                kb.release(Key.ctrl)
             else:
+                # Windows
                 kb.press(Key.ctrl)
                 kb.press('v')
                 kb.release('v')
